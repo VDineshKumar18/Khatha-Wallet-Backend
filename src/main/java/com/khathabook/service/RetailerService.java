@@ -3,7 +3,9 @@ package com.khathabook.service;
 import com.khathabook.model.Retailer;
 import com.khathabook.repository.RetailerRepository;
 import org.springframework.stereotype.Service;
-
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.Optional;
 
 @Service
@@ -41,5 +43,35 @@ public class RetailerService {
         // For now, only name/phone as requested.
 
         return retailerRepository.save(retailer);
+    }
+
+    private static final String UPLOAD_DIR = "uploads/";
+
+    public String uploadKYCDocument(Long retailerId, MultipartFile file, String docType) throws IOException {
+        Retailer retailer = getProfile(retailerId);
+
+        // Create directory if not exists
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // Generate unique filename
+        String filename = "kyc_" + docType + "_" + retailerId + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        Path filePath = uploadPath.resolve(filename);
+
+        // Save file
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        // Update Retailer
+        if ("LICENSE".equalsIgnoreCase(docType)) {
+            retailer.setShopLicenseUrl(filename);
+        } else if ("PHOTO".equalsIgnoreCase(docType)) {
+            retailer.setShopPhotoUrl(filename);
+        }
+        
+        retailerRepository.save(retailer);
+
+        return filename;
     }
 }

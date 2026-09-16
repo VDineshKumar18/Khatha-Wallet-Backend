@@ -19,16 +19,20 @@ public class Bill {
 
     private String type;
     private double amount;
+    @Column(columnDefinition = "TEXT")
     private String items;
     private String imageUrl; // ✅ New Field for Bill Image
 
     @Column(nullable = false)
     private boolean refunded = false;
 
+    @Column(nullable = false)
+    private boolean isDeleted = false; // ✅ Soft delete flag for Recycle Bin
+
     private Double refundAmount;
     private java.time.LocalDate refundDate;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd['T'HH:mm[:ss][.SSS]['Z']]")
     private LocalDateTime billDate;
 
     // ===== PAYMENT =====
@@ -47,6 +51,7 @@ public class Bill {
     // ================= NEW (SAFE ADDITION) =================
     private int loyaltyPointsUsed;      // points redeemed
     private double discountAmount;      // ₹ value
+    private String gatewayTransactionRef;
     // ======================================================
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -111,6 +116,9 @@ public class Bill {
     public LocalDate getRefundDate() { return refundDate; }
     public void setRefundDate(LocalDate refundDate) { this.refundDate = refundDate; }
 
+    public boolean isDeleted() { return isDeleted; }
+    public void setDeleted(boolean isDeleted) { this.isDeleted = isDeleted; }
+
     // ===== NEW GETTERS =====
     public int getLoyaltyPointsUsed() { return loyaltyPointsUsed; }
     public void setLoyaltyPointsUsed(int loyaltyPointsUsed) {
@@ -120,5 +128,10 @@ public class Bill {
     public double getDiscountAmount() { return discountAmount; }
     public void setDiscountAmount(double discountAmount) {
         this.discountAmount = discountAmount;
+    }
+
+    public String getGatewayTransactionRef() { return gatewayTransactionRef; }
+    public void setGatewayTransactionRef(String gatewayTransactionRef) {
+        this.gatewayTransactionRef = gatewayTransactionRef;
     }
 }

@@ -18,6 +18,7 @@ public class BillDTO {
     private String paymentMode;
     private double paidAmount;
     private double dueAmount;
+    private String gatewayTransactionRef;
 
     public BillDTO(Long id, String billNumber, LocalDateTime billDate, double amount, String status, CustomerDTO customer) {
         this.id = id;
@@ -69,4 +70,7 @@ public class BillDTO {
 
     public double getDueAmount() { return dueAmount; }
     public void setDueAmount(double dueAmount) { this.dueAmount = dueAmount; }
+
+    public String getGatewayTransactionRef() { return gatewayTransactionRef; }
+    public void setGatewayTransactionRef(String gatewayTransactionRef) { this.gatewayTransactionRef = gatewayTransactionRef; }
 }

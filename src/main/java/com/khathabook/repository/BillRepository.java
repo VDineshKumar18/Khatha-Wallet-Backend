@@ -25,8 +25,15 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
 
     // ✅ PAID BILLS (NO CUSTOMER)
     List<Bill> findByRetailerIdAndPaidTrue(Long retailerId);
-    // ✅ ALL BILLS FOR RETAILER
+    
+    // ✅ ALL BILLS FOR RETAILER (LEGACY)
     List<Bill> findByRetailerIdOrderByBillDateDesc(Long retailerId);
+
+    // ✅ ACTIVE BILLS (NOT DELETED)
+    List<Bill> findByRetailerIdAndIsDeletedFalseOrderByBillDateDesc(Long retailerId);
+
+    // ✅ RECYCLED BILLS (SOFT DELETED)
+    List<Bill> findByRetailerIdAndIsDeletedTrueOrderByBillDateDesc(Long retailerId);
 
     // ================= NEW – REPORTING SUPPORT =================
 

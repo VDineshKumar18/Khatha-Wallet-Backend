@@ -130,6 +130,56 @@ public class BillController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    // ================= RECYCLE BIN OPs =================
+
+    @GetMapping("/recycled")
+    public ResponseEntity<List<BillDTO>> getRecycledBills(
+            @RequestHeader("X-Retailer-Id") Long retailerId
+    ) {
+        List<Bill> bills = billService.getRecycledBills(retailerId);
+        List<BillDTO> dtos = bills.stream().map(this::convertToDTO).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> softDeleteBill(
+            @PathVariable Long id,
+            @RequestHeader("X-Retailer-Id") Long retailerId
+    ) {
+        try {
+            billService.deleteBill(id, retailerId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<?> restoreBill(
+            @PathVariable Long id,
+            @RequestHeader("X-Retailer-Id") Long retailerId
+    ) {
+        try {
+            billService.restoreBill(id, retailerId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<?> permanentDeleteBill(
+            @PathVariable Long id,
+            @RequestHeader("X-Retailer-Id") Long retailerId
+    ) {
+        try {
+            billService.permanentDeleteBill(id, retailerId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     private BillDTO convertToDTO(Bill bill) {
         BillDTO dto = new BillDTO();
         dto.setId(bill.getId());
@@ -144,6 +194,7 @@ public class BillController {
         dto.setPaymentMode(bill.getPaymentMode());
         dto.setPaidAmount(bill.getPaidAmount());
         dto.setDueAmount(bill.getDueAmount());
+        dto.setGatewayTransactionRef(bill.getGatewayTransactionRef());
 
         if (bill.getCustomer() != null) {
             Customer c = bill.getCustomer();

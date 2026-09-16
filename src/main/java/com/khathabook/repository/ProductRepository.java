@@ -57,4 +57,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByRetailerIn(List<com.khathabook.model.Retailer> retailers);
     
     List<Product> findByRetailer_IdIn(List<Long> retailerIds);
+
+    List<Product> findByApprovalStatus(String status);
 }

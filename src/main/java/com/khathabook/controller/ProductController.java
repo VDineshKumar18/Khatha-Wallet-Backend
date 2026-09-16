@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 import com.khathabook.model.Product;
 import com.khathabook.model.ProductCategory;
 import com.khathabook.model.Retailer;
+import com.khathabook.repository.ProductReportRepository;
 import com.khathabook.repository.ProductRepository;
 import com.khathabook.repository.RetailerRepository;
 import com.khathabook.service.ProductService;
@@ -21,17 +23,20 @@ public class ProductController {
     private final StockService stockService;
     private final ProductRepository productRepository;
     private final RetailerRepository retailerRepository;
+    private final ProductReportRepository productReportRepository;
 
     public ProductController(
             ProductService productService,
             StockService stockService,
             ProductRepository productRepository,
-            RetailerRepository retailerRepository
+            RetailerRepository retailerRepository,
+            ProductReportRepository productReportRepository
     ) {
         this.productService = productService;
         this.stockService = stockService;
         this.productRepository = productRepository;
         this.retailerRepository = retailerRepository;
+        this.productReportRepository = productReportRepository;
     }
 
     // =================================================
@@ -68,12 +73,21 @@ public class ProductController {
     @GetMapping
     public List<Product> getProducts(
             @RequestParam Long retailerId,
-            @RequestParam(required = false) ProductCategory category
+            @RequestParam(required = false) ProductCategory category,
+            @RequestParam(required = false, defaultValue = "false") boolean includeAllStatuses,
+            HttpServletRequest request
     ) {
+        List<Product> products;
         if (category != null) {
-            return productRepository.findByRetailer_IdAndCategory(retailerId, category);
+            products = productRepository.findByRetailer_IdAndCategory(retailerId, category);
+        } else {
+            products = productRepository.findByRetailer_Id(retailerId);
         }
-        return productRepository.findByRetailer_Id(retailerId);
+        return products.stream()
+                .map(p -> sanitizeProduct(p, request))
+                .filter(p -> includeAllStatuses || "APPROVED".equalsIgnoreCase(p.getApprovalStatus()))
+                .filter(p -> productReportRepository.countByProductIdAndStatus(p.getId(), "PENDING") < 3)
+                .toList();
     }
     
     // =================================================
@@ -85,20 +99,39 @@ public class ProductController {
     @GetMapping("/public/all")
     public List<Product> getAllProducts(
             @RequestParam(required = false) Double lat,
-            @RequestParam(required = false) Double lng
+            @RequestParam(required = false) Double lng,
+            HttpServletRequest request
     ) {
+        List<Product> products;
         if (lat != null && lng != null) {
-            // Find top 3 nearest retailers within 50km
-            // You can adjust the radius (50) and limit (3) as needed
             List<Retailer> nearestRetailers = retailerRepository.findNearestRetailers(lat, lng, 50, 3);
-            
-            if (nearestRetailers.isEmpty()) {
-                return List.of();
-            }
-            
-            return productRepository.findByRetailerIn(nearestRetailers);
+            if (nearestRetailers.isEmpty()) return List.of();
+            products = productRepository.findByRetailerIn(nearestRetailers);
+        } else {
+            products = productRepository.findAll();
         }
-        return productRepository.findAll();
+        
+        return products.stream()
+                .map(p -> sanitizeProduct(p, request))
+                .filter(p -> productReportRepository.countByProductIdAndStatus(p.getId(), "PENDING") < 3)
+                .toList();
+    }
+
+    private Product sanitizeProduct(Product p, HttpServletRequest request) {
+        if (p.getImageUrl() != null && p.getImageUrl().contains("localhost:")) {
+            String currentBase = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+            // Replace any localhost:#### with the current working host:port
+            String sanitized = p.getImageUrl().replaceAll("localhost:\\d+", request.getServerName() + ":" + request.getServerPort());
+            p.setImageUrl(sanitized);
+        }
+        return p;
+    }
+
+    // Deprecated filter due to stream mapping above
+    private List<Product> filterReportedProducts(List<Product> products) {
+        return products.stream()
+                .filter(p -> productReportRepository.countByProductIdAndStatus(p.getId(), "PENDING") < 3)
+                .toList();
     }
 
     // =================================================
@@ -203,6 +236,11 @@ public class ProductController {
             product.setUnitsPerBox(updated.getUnitsPerBox());
         }
 
+        // Reset status to PENDING if currently REJECTED
+        if ("REJECTED".equalsIgnoreCase(product.getApprovalStatus())) {
+            product.setApprovalStatus("PENDING");
+        }
+
         return ResponseEntity.ok(productRepository.save(product));
     }
 
@@ -211,12 +249,13 @@ public class ProductController {
     // =================================================
     @PostMapping("/upload-image")
     public ResponseEntity<?> uploadProductImage(
-            @RequestParam("file") org.springframework.web.multipart.MultipartFile file
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            HttpServletRequest request
     ) {
         try {
             String filename = productService.uploadProductImage(file);
-            // Return full URL so frontend can easily use it
-            String imageUrl = "http://localhost:8084/api/products/image/" + filename;
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+            String imageUrl = baseUrl + "/api/products/image/" + filename;
             return ResponseEntity.ok(java.util.Map.of("imageUrl", imageUrl, "filename", filename));
         } catch (java.io.IOException e) {
             return ResponseEntity.internalServerError().body("Upload failed: " + e.getMessage());

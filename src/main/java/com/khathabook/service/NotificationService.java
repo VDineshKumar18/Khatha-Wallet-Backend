@@ -82,6 +82,44 @@ public class NotificationService {
         sendEmailViaBrevo(toEmail, "KhathaBook Login OTP", html);
     }
 
+    private String formatItemsList(String itemsJson) {
+        if (itemsJson == null || itemsJson.isBlank()) {
+            return "No items";
+        }
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode rootNode = mapper.readTree(itemsJson);
+            
+            StringBuilder sb = new StringBuilder();
+            if (rootNode.isArray()) {
+                for (com.fasterxml.jackson.databind.JsonNode node : rootNode) {
+                    String name = node.has("name") ? node.get("name").asText().trim() : "Unknown Item";
+                    String unit = node.has("unit") ? node.get("unit").asText().trim() : "";
+                    String qtyStr = "";
+                    if (node.has("qty")) {
+                        com.fasterxml.jackson.databind.JsonNode qtyNode = node.get("qty");
+                        if (qtyNode.isNumber()) {
+                            qtyStr = String.valueOf(qtyNode.asInt());
+                        } else {
+                            qtyStr = qtyNode.asText();
+                        }
+                    }
+                    double total = node.has("total") ? node.get("total").asDouble() : 0.0;
+                    
+                    if (sb.length() > 0) sb.append("\n");
+                    sb.append("• ").append(name);
+                    if (!unit.isEmpty()) {
+                        sb.append(" - ").append(unit);
+                    }
+                    sb.append(" (x").append(qtyStr).append(") - ₹").append(String.format("%.2f", total));
+                }
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return itemsJson;
+        }
+    }
+
     // ======================================================
     // ✅ BILL EMAIL
     // ======================================================
@@ -115,7 +153,7 @@ public class NotificationService {
                     customer.getName(),
                     bill.getBillNumber(),
                     bill.getBillDate(),
-                    bill.getItems(),
+                    formatItemsList(bill.getItems()),
                     bill.getAmount(),
                     bill.getPaidAmount(),
                     bill.getDueAmount(),
@@ -181,7 +219,7 @@ public class NotificationService {
                     order.getId(),
                     order.getCustomer().getName(),
                     order.getTotalAmount(),
-                    order.getItems()
+                    formatItemsList(order.getItems())
             );
             sendEmailViaBrevo(retailer.getEmail(), "New Order Received! 📦", html);
         } catch (Exception e) {
@@ -198,6 +236,7 @@ public class NotificationService {
 
             String statusEmoji = switch (order.getStatus()) {
                 case "PACKED" -> "📦";
+                case "READY_FOR_PICKUP" -> "✅";
                 case "READY" -> "✅";
                 case "DELIVERED" -> "🎉";
                 case "COMPLETED" -> "🎉";
@@ -205,10 +244,11 @@ public class NotificationService {
             };
 
             String extraMessage = "";
-            if ("READY".equals(order.getStatus())) {
-                extraMessage = "Your order is ready for pickup! Please visit the store.";
+            String otp = order.getDeliveryOtp() != null ? order.getDeliveryOtp() : "N/A";
+            
+            if ("READY_FOR_PICKUP".equals(order.getStatus()) || "READY".equals(order.getStatus())) {
+                extraMessage = "Your order is ready for pickup! Please visit the store. \n\n🔐 **Your Delivery OTP is: " + otp + "**\n\nPlease share this OTP with the delivery agent.";
             } else if ("PACKED".equals(order.getStatus())) {
-                String otp = order.getDeliveryOtp() != null ? order.getDeliveryOtp() : "N/A";
                 extraMessage = "We have packed your items. \n\n🔐 **Your Delivery OTP is: " + otp + "**\n\nPlease share this OTP with the delivery agent.";
             }
 

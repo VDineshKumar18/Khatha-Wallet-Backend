@@ -44,6 +44,21 @@ public class Retailer {
     @Column(name = "scheme_monthly_amount")
     private Double schemeMonthlyAmount = 500.0; // Default Monthly
 
+    @Column(name = "is_verified")
+    private Boolean isVerified = false;
+
+    // ===== NEW ADMIN VERIFICATION & KYC FIELDS =====
+    @Column(name = "approval_status")
+    private String approvalStatus = "PENDING"; // PENDING, APPROVED, SUSPENDED, REJECTED
+
+    @Column(name = "shop_license_url")
+    private String shopLicenseUrl;
+
+    @Column(name = "gst_number")
+    private String gstNumber;
+
+    @Column(name = "shop_photo_url")
+    private String shopPhotoUrl;
 
     // 🔴 DO NOT serialize relationships
     @OneToMany(mappedBy = "retailer", fetch = FetchType.LAZY)
@@ -95,4 +110,20 @@ public class Retailer {
 
     public Double getSchemeMonthlyAmount() { return schemeMonthlyAmount; }
     public void setSchemeMonthlyAmount(Double schemeMonthlyAmount) { this.schemeMonthlyAmount = schemeMonthlyAmount; }
+
+    public Boolean getIsVerified() { return isVerified != null && isVerified; }
+    public void setIsVerified(Boolean isVerified) { this.isVerified = isVerified; }
+
+    // ===== NEW GETTERS & SETTERS =====
+    public String getApprovalStatus() { return approvalStatus; }
+    public void setApprovalStatus(String approvalStatus) { this.approvalStatus = approvalStatus; }
+
+    public String getShopLicenseUrl() { return shopLicenseUrl; }
+    public void setShopLicenseUrl(String shopLicenseUrl) { this.shopLicenseUrl = shopLicenseUrl; }
+
+    public String getGstNumber() { return gstNumber; }
+    public void setGstNumber(String gstNumber) { this.gstNumber = gstNumber; }
+
+    public String getShopPhotoUrl() { return shopPhotoUrl; }
+    public void setShopPhotoUrl(String shopPhotoUrl) { this.shopPhotoUrl = shopPhotoUrl; }
 }

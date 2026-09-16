@@ -50,6 +50,16 @@ public class CustomerController {
         return service.save(customer);
     }
 
+    @PutMapping("/{id}/phone")
+    public Customer updatePhone(
+            @PathVariable Long id,
+            @RequestParam String phone
+    ) {
+        Customer customer = service.getById(id);
+        customer.setPhone(phone);
+        return service.save(customer);
+    }
+
     // ✅ NEW: UPDATE SCHEME DETAILS
     @PutMapping("/{id}/scheme")
     public Customer updateScheme(

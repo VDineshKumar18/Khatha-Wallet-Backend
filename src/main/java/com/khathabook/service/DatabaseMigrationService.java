@@ -28,5 +28,12 @@ public class DatabaseMigrationService implements CommandLineRunner {
                  System.err.println("⚠️ [MIGRATION] Failed to drop index: " + e.getMessage());
             }
         }
+
+        try {
+            jdbcTemplate.execute("ALTER TABLE bills MODIFY COLUMN items TEXT");
+            System.out.println("✅ [MIGRATION] Successfully modified bills.items column to TEXT");
+        } catch (Exception e) {
+            System.err.println("⚠️ [MIGRATION] Failed to modify bills.items column: " + e.getMessage());
+        }
     }
 }

@@ -33,6 +33,7 @@ build/
 .vscode/
 .env
 *.txt
+*.log
 uploads/
 logs/
 target/

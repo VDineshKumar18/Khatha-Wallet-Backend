@@ -32,12 +32,27 @@ public class Order {
 
     private String paymentMode; // CASH, UPI, KHATHA
 
+    private String gatewayTransactionRef; // Gateway transaction reference ID
+
     private String status; // PENDING, PACKED, COMPLETED, CANCELLED
 
     private String deliveryOtp; // ✅ OTP for delivery verification
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDate;
+
+    // State Machine Timestamps
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime acceptedAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime expectedPackingTime;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime readyForPickupAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime packedAt;
     
     // Auto-set date
     @PrePersist
@@ -46,7 +61,7 @@ public class Order {
             this.orderDate = LocalDateTime.now();
         }
         if (this.status == null) {
-            this.status = "PENDING";
+            this.status = "PLACED";
         }
     }
 
@@ -69,6 +84,9 @@ public class Order {
     public String getPaymentMode() { return paymentMode; }
     public void setPaymentMode(String paymentMode) { this.paymentMode = paymentMode; }
 
+    public String getGatewayTransactionRef() { return gatewayTransactionRef; }
+    public void setGatewayTransactionRef(String gatewayTransactionRef) { this.gatewayTransactionRef = gatewayTransactionRef; }
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
@@ -77,4 +95,16 @@ public class Order {
 
     public String getDeliveryOtp() { return deliveryOtp; }
     public void setDeliveryOtp(String deliveryOtp) { this.deliveryOtp = deliveryOtp; }
+
+    public LocalDateTime getAcceptedAt() { return acceptedAt; }
+    public void setAcceptedAt(LocalDateTime acceptedAt) { this.acceptedAt = acceptedAt; }
+
+    public LocalDateTime getExpectedPackingTime() { return expectedPackingTime; }
+    public void setExpectedPackingTime(LocalDateTime expectedPackingTime) { this.expectedPackingTime = expectedPackingTime; }
+
+    public LocalDateTime getReadyForPickupAt() { return readyForPickupAt; }
+    public void setReadyForPickupAt(LocalDateTime readyForPickupAt) { this.readyForPickupAt = readyForPickupAt; }
+
+    public LocalDateTime getPackedAt() { return packedAt; }
+    public void setPackedAt(LocalDateTime packedAt) { this.packedAt = packedAt; }
 }

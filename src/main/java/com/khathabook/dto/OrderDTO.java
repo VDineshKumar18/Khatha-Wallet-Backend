@@ -12,6 +12,14 @@ public class OrderDTO {
     private String paymentMode; // CASH, UPI, KHATHA
     private String status;
     private String orderDate;
+    private Integer unreadChatCount; // ✅ ADDED
+    private String gatewayTransactionRef; // ✅ ADDED
+
+    // State Machine Fields
+    private String acceptedAt;
+    private String expectedPackingTime;
+    private String readyForPickupAt;
+    private String packedAt;
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -46,4 +54,22 @@ public class OrderDTO {
 
     public String getOrderDate() { return orderDate; }
     public void setOrderDate(String orderDate) { this.orderDate = orderDate; }
+
+    public Integer getUnreadChatCount() { return unreadChatCount; }
+    public void setUnreadChatCount(Integer unreadChatCount) { this.unreadChatCount = unreadChatCount; }
+
+    public String getAcceptedAt() { return acceptedAt; }
+    public void setAcceptedAt(String acceptedAt) { this.acceptedAt = acceptedAt; }
+
+    public String getExpectedPackingTime() { return expectedPackingTime; }
+    public void setExpectedPackingTime(String expectedPackingTime) { this.expectedPackingTime = expectedPackingTime; }
+
+    public String getReadyForPickupAt() { return readyForPickupAt; }
+    public void setReadyForPickupAt(String readyForPickupAt) { this.readyForPickupAt = readyForPickupAt; }
+
+    public String getPackedAt() { return packedAt; }
+    public void setPackedAt(String packedAt) { this.packedAt = packedAt; }
+
+    public String getGatewayTransactionRef() { return gatewayTransactionRef; }
+    public void setGatewayTransactionRef(String gatewayTransactionRef) { this.gatewayTransactionRef = gatewayTransactionRef; }
 }

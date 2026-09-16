@@ -141,6 +141,7 @@ public class CustomerAuthController {
             map.put("retailerId", r.getId());
             map.put("name", r.getName() != null ? r.getName() : "Retailer " + r.getId());
             map.put("phone", r.getPhone());
+            map.put("isVerified", r.getIsVerified());
             return map;
         }).toList();
     }
@@ -154,8 +155,11 @@ public class CustomerAuthController {
             data.put("retailerId", c.getRetailer().getId());
             data.put("retailerName", c.getRetailer().getName() != null ? c.getRetailer().getName() : "Retailer " + c.getRetailer().getId());
             data.put("retailerPhone", c.getRetailer().getPhone());
+            data.put("retailerIsVerified", c.getRetailer().getIsVerified());
             // Add email/name context if needed, but client usually knows
+            // Add email/name/phone context
             data.put("customerName", c.getName());
+            data.put("customerPhone", c.getPhone());
             data.put("email", c.getEmail());
             
             // ✅ SCHEME DETAILS

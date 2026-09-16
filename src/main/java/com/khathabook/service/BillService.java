@@ -55,7 +55,9 @@ public class BillService {
 
         bill.setCustomer(customer);
         bill.setRetailer(customer.getRetailer());
-        bill.setBillDate(LocalDateTime.now());
+        if (bill.getBillDate() == null) {
+            bill.setBillDate(LocalDateTime.now());
+        }
 
         int pointsUsed = bill.getLoyaltyPointsUsed();
         double discount = 0;
@@ -89,7 +91,9 @@ public class BillService {
             bill.setStatus("DUE");
         }
 
-        reduceStockFromBill(bill.getItems(), retailerId);
+        if ("SALE".equalsIgnoreCase(bill.getType())) {
+            reduceStockFromBill(bill.getItems(), retailerId);
+        }
 
         if ("GAVE".equalsIgnoreCase(bill.getType())) {
             // ✅ Only add the balance (due) to customer debt, not the full bill total
@@ -112,8 +116,15 @@ public class BillService {
                 customer.setTotalReceived(customer.getTotalReceived() + bill.getPaidAmount());
             }
             
-            // Earn loyalty points on total purchase value
+            // Earn loyalty points on total purchase value:
+            // - 10 points per 100/- for Cash, UPI, Netbanking, Cards (non-Khatha)
+            // - 5 points per 100/- for Khatha
             int earned = (int) (finalAmount / 100);
+            if ("KHATHA".equalsIgnoreCase(bill.getPaymentMode())) {
+                earned *= 5;
+            } else {
+                earned *= 10;
+            }
             customer.setLoyaltyPoints(customer.getLoyaltyPoints() + earned);
         }
 
@@ -135,7 +146,9 @@ public class BillService {
         bill.setRetailer(retailer);
         bill.setPaid(true);
         bill.setCustomer(null);
-        bill.setBillDate(LocalDateTime.now());
+        if (bill.getBillDate() == null) {
+            bill.setBillDate(LocalDateTime.now());
+        }
 
         bill.setBillNumber(generateBillNumber());
         bill.setPaidAmount(bill.getAmount());
@@ -162,7 +175,7 @@ public class BillService {
 
     // ================= GET ALL BILLS (RETAILER) =================
     public List<Bill> getAllBills(Long retailerId) {
-        return billRepository.findByRetailerIdOrderByBillDateDesc(retailerId);
+        return billRepository.findByRetailerIdAndIsDeletedFalseOrderByBillDateDesc(retailerId);
     }
 
     // ================= STOCK REDUCTION =================
@@ -347,5 +360,50 @@ public class BillService {
         }
     }
 
+
+    // ================= RECYCLE BIN OPs =================
+    public List<Bill> getRecycledBills(Long retailerId) {
+        return billRepository.findByRetailerIdAndIsDeletedTrueOrderByBillDateDesc(retailerId);
+    }
+
+    public void deleteBill(Long id, Long retailerId) {
+        Bill bill = billRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bill not found"));
+
+        if (!bill.getRetailer().getId().equals(retailerId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        // SOFT DELETE
+        bill.setDeleted(true);
+        billRepository.save(bill);
+    }
+
+    public void restoreBill(Long id, Long retailerId) {
+        Bill bill = billRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bill not found"));
+
+        if (!bill.getRetailer().getId().equals(retailerId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        bill.setDeleted(false);
+        billRepository.save(bill);
+    }
+
+    public void permanentDeleteBill(Long id, Long retailerId) {
+        Bill bill = billRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bill not found"));
+
+        if (!bill.getRetailer().getId().equals(retailerId)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        if ("SALE".equalsIgnoreCase(bill.getType())) {
+            restoreStock(bill.getItems(), retailerId);
+        }
+
+        billRepository.delete(bill);
+    }
 
 }

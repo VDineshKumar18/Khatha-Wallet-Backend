@@ -5,6 +5,8 @@ import com.khathabook.model.Retailer;
 import com.khathabook.service.RetailerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/retailer")
@@ -14,13 +16,16 @@ public class RetailerController {
     private final RetailerService retailerService;
     private final com.khathabook.service.LocationService locationService;
     private final com.khathabook.repository.RetailerRepository retailerRepository;
+    private final com.khathabook.repository.RetailerRatingRepository retailerRatingRepository;
 
     public RetailerController(RetailerService retailerService, 
                              com.khathabook.service.LocationService locationService,
-                             com.khathabook.repository.RetailerRepository retailerRepository) {
+                             com.khathabook.repository.RetailerRepository retailerRepository,
+                             com.khathabook.repository.RetailerRatingRepository retailerRatingRepository) {
         this.retailerService = retailerService;
         this.locationService = locationService;
         this.retailerRepository = retailerRepository;
+        this.retailerRatingRepository = retailerRatingRepository;
     }
 
     @GetMapping("/profile")
@@ -40,7 +45,12 @@ public class RetailerController {
                 retailer.getLongitude(),
                 retailer.getDeliveryRadiusKm(),
                 retailer.getSchemeTargetAmount(),
-                retailer.getSchemeMonthlyAmount()
+                retailer.getSchemeMonthlyAmount(),
+                retailer.getIsVerified(),
+                retailer.getApprovalStatus(),
+                retailer.getShopLicenseUrl(),
+                retailer.getGstNumber(),
+                retailer.getShopPhotoUrl()
             );
             return ResponseEntity.ok(dto);
         } catch (RuntimeException e) {
@@ -95,7 +105,12 @@ public class RetailerController {
                 saved.getLongitude(),
                 saved.getDeliveryRadiusKm(),
                 saved.getSchemeTargetAmount(),
-                saved.getSchemeMonthlyAmount()
+                saved.getSchemeMonthlyAmount(),
+                saved.getIsVerified(),
+                saved.getApprovalStatus(),
+                saved.getShopLicenseUrl(),
+                saved.getGstNumber(),
+                saved.getShopPhotoUrl()
             );
             return ResponseEntity.ok(dto);
         } catch (RuntimeException e) {
@@ -108,6 +123,20 @@ public class RetailerController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/kyc-upload", consumes = "multipart/form-data")
+    public ResponseEntity<?> uploadKYC(
+            @RequestHeader("X-Retailer-Id") Long retailerId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("type") String type // LICENSE, PHOTO
+    ) {
+        try {
+            String fileName = retailerService.uploadKYCDocument(retailerId, file, type);
+            return ResponseEntity.ok(java.util.Collections.singletonMap("fileName", fileName));
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Upload failed: " + e.getMessage());
         }
     }
     
@@ -143,6 +172,9 @@ public class RetailerController {
                     : radius;
                 
                 if (distance <= deliveryRadius) {
+                    Double avgStore = retailerRatingRepository.getAverageStoreRating(retailer.getId());
+                    Long count = retailerRatingRepository.countRatingsByRetailerId(retailer.getId());
+
                     java.util.Map<String, Object> retailerWithDistance = new java.util.HashMap<>();
                     retailerWithDistance.put("retailerId", retailer.getId());
                     retailerWithDistance.put("name", retailer.getName());
@@ -150,11 +182,13 @@ public class RetailerController {
                     retailerWithDistance.put("shopName", retailer.getShopName());
                     retailerWithDistance.put("phone", retailer.getPhone());
                     retailerWithDistance.put("retailerPhone", retailer.getPhone());
-                    retailerWithDistance.put("retailerPhone", retailer.getPhone());
                     retailerWithDistance.put("email", retailer.getEmail());
                     retailerWithDistance.put("distance", distance);
                     retailerWithDistance.put("schemeTargetAmount", retailer.getSchemeTargetAmount());
                     retailerWithDistance.put("schemeMonthlyAmount", retailer.getSchemeMonthlyAmount());
+                    retailerWithDistance.put("isVerified", retailer.getIsVerified());
+                    retailerWithDistance.put("rating", avgStore != null ? avgStore : 4.5);
+                    retailerWithDistance.put("ratingCount", count);
                     nearbyRetailers.add(retailerWithDistance);
                 }
             }

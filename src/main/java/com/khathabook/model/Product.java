@@ -43,6 +43,10 @@ public class Product {
     @Column(nullable = false)
     private double quantity = 0;
 
+    // ===== NEW ADMIN MODERATION =====
+    @Column(name = "approval_status")
+    private String approvalStatus = "PENDING"; // PENDING, APPROVED, REJECTED
+
     // ================= BUY CONFIG =================
     private Integer bagSizeKg;        // WEIGHT
     private Integer packetsPerBox;    // LIQUID
@@ -106,4 +110,7 @@ public class Product {
 
     public void setLowStockAlert(int lowStockAlert) { this.lowStockAlert = lowStockAlert; }
     public void setRetailer(Retailer retailer) { this.retailer = retailer; }
+
+    public String getApprovalStatus() { return approvalStatus; }
+    public void setApprovalStatus(String approvalStatus) { this.approvalStatus = approvalStatus; }
 }

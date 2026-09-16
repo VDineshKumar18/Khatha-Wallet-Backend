@@ -15,9 +15,17 @@ public class RetailerDTO {
     private Double schemeTargetAmount;
     private Double schemeMonthlyAmount;
 
+    private Boolean isVerified;
+    private String approvalStatus;
+    private String shopLicenseUrl;
+    private String gstNumber;
+    private String shopPhotoUrl;
+
     public RetailerDTO(Long id, String name, String email, String phone, String shopName, 
                        String upiId, String payeeName, Double latitude, Double longitude, 
-                       Integer deliveryRadiusKm, Double schemeTargetAmount, Double schemeMonthlyAmount) {
+                       Integer deliveryRadiusKm, Double schemeTargetAmount, Double schemeMonthlyAmount,
+                       Boolean isVerified, String approvalStatus, String shopLicenseUrl, 
+                       String gstNumber, String shopPhotoUrl) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -30,6 +38,11 @@ public class RetailerDTO {
         this.deliveryRadiusKm = deliveryRadiusKm;
         this.schemeTargetAmount = schemeTargetAmount;
         this.schemeMonthlyAmount = schemeMonthlyAmount;
+        this.isVerified = isVerified;
+        this.approvalStatus = approvalStatus;
+        this.shopLicenseUrl = shopLicenseUrl;
+        this.gstNumber = gstNumber;
+        this.shopPhotoUrl = shopPhotoUrl;
     }
 
     public Long getId() { return id; }
@@ -67,4 +80,19 @@ public class RetailerDTO {
     
     public Double getSchemeMonthlyAmount() { return schemeMonthlyAmount; }
     public void setSchemeMonthlyAmount(Double schemeMonthlyAmount) { this.schemeMonthlyAmount = schemeMonthlyAmount; }
+
+    public Boolean getIsVerified() { return isVerified; }
+    public void setIsVerified(Boolean isVerified) { this.isVerified = isVerified; }
+
+    public String getApprovalStatus() { return approvalStatus; }
+    public void setApprovalStatus(String approvalStatus) { this.approvalStatus = approvalStatus; }
+
+    public String getShopLicenseUrl() { return shopLicenseUrl; }
+    public void setShopLicenseUrl(String shopLicenseUrl) { this.shopLicenseUrl = shopLicenseUrl; }
+
+    public String getGstNumber() { return gstNumber; }
+    public void setGstNumber(String gstNumber) { this.gstNumber = gstNumber; }
+
+    public String getShopPhotoUrl() { return shopPhotoUrl; }
+    public void setShopPhotoUrl(String shopPhotoUrl) { this.shopPhotoUrl = shopPhotoUrl; }
 }
