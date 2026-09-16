@@ -34,13 +34,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Allow Netlify frontend + localhost dev
-        config.setAllowedOrigins(List.of(
-            "https://khathawallet.netlify.app",
-            "http://localhost:5188",
-            "http://localhost:5173",
-            "http://localhost:3000"
-        ));
+        // Allow any frontend origin (Netlify, custom domain, localhost)
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
